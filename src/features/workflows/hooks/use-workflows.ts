@@ -1,9 +1,5 @@
 import { useTRPC } from '@/trpc/client';
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from '@tanstack/react-query';
+import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useWorkflowsParams } from './use-workflows-params';
 /**
@@ -51,9 +47,7 @@ export const useRemoveWorkflow = () => {
       onSuccess: (data) => {
         toast.success(`Workflow "${data.name}" removed`);
         queryClient.invalidateQueries(trpc.workflows.getMany.queryOptions({}));
-        queryClient.invalidateQueries(
-          trpc.workflows.getOne.queryFilter({ id: data.id })
-        );
+        queryClient.invalidateQueries(trpc.workflows.getOne.queryFilter({ id: data.id }));
       },
       onError: (error) => {
         toast.error(`Failed to remove workflow: ${error.message}`);
@@ -85,9 +79,7 @@ export const useUpdateWorkflowName = () => {
       onSuccess: (data) => {
         toast.success(`Workflow "${data.name}" updated`);
         queryClient.invalidateQueries(trpc.workflows.getMany.queryOptions({}));
-        queryClient.invalidateQueries(
-          trpc.workflows.getOne.queryFilter({ id: data.id })
-        );
+        queryClient.invalidateQueries(trpc.workflows.getOne.queryFilter({ id: data.id }));
       },
       onError: (error) => {
         toast.error(`Failed to update workflow: ${error.message}`);
@@ -109,12 +101,29 @@ export const useUpdateWorkflow = () => {
       onSuccess: (data) => {
         toast.success(`Workflow "${data.name}" saved`);
         queryClient.invalidateQueries(trpc.workflows.getMany.queryOptions({}));
-        queryClient.invalidateQueries(
-          trpc.workflows.getOne.queryFilter({ id: data.id })
-        );
+        queryClient.invalidateQueries(trpc.workflows.getOne.queryFilter({ id: data.id }));
       },
       onError: (error) => {
         toast.error(`Failed to save workflow: ${error.message}`);
+      },
+    })
+  );
+};
+
+/**
+ * Hook to execute a workflow
+ */
+
+export const useExecuteWorkflow = () => {
+  const trpc = useTRPC();
+
+  return useMutation(
+    trpc.workflows.execute.mutationOptions({
+      onSuccess: (data) => {
+        toast.success(`Workflow "${data.name}" executed`);
+      },
+      onError: (error) => {
+        toast.error(`Failed to execute workflow: ${error.message}`);
       },
     })
   );

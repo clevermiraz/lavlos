@@ -1,17 +1,31 @@
 import { PAGINATION } from '@/config/constants';
-import { generateSlug } from 'random-word-slugs';
-import prisma from '@/lib/db';
-import type { Node, Edge } from '@xyflow/react';
-import {
-  createTRPCRouter,
-  premiumProcedure,
-  protectedProcedure,
-} from '@/trpc/init';
-import z from 'zod';
 import { NodeType } from '@/generated/prisma';
-import { connect } from 'http2';
+import { inngest } from '@/inngest/client';
+import prisma from '@/lib/db';
+import { createTRPCRouter, premiumProcedure, protectedProcedure } from '@/trpc/init';
+import type { Edge, Node } from '@xyflow/react';
+import { generateSlug } from 'random-word-slugs';
+import z from 'zod';
 
 export const workflowsRouter = createTRPCRouter({
+  execute: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      const workflow = await prisma.workflow.findUniqueOrThrow({
+        where: {
+          id: input.id,
+          userId: ctx.auth.user.id,
+        },
+      });
+
+      await inngest.send({
+        name: 'workflows/execute.workflow',
+        data: { workflowId: input.id },
+      });
+
+      return workflow;
+    }),
+
   create: premiumProcedure.mutation(async ({ ctx }) => {
     return prisma.workflow.create({
       data: {
@@ -124,43 +138,41 @@ export const workflowsRouter = createTRPCRouter({
         },
       });
     }),
-  getOne: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const workflow = await prisma.workflow.findUniqueOrThrow({
-        where: {
-          id: input.id,
-          userId: ctx.auth.user.id,
-        },
-        include: {
-          nodes: true,
-          connections: true,
-        },
-      });
-      // Transform the nodes and edges to the format that React Flow expects
-      const nodes: Node[] = workflow.nodes.map((node) => ({
-        id: node.id,
-        type: node.type,
-        position: node.position as { x: number; y: number },
-        data: (node.data as Record<string, unknown>) || {},
-      }));
+  getOne: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const workflow = await prisma.workflow.findUniqueOrThrow({
+      where: {
+        id: input.id,
+        userId: ctx.auth.user.id,
+      },
+      include: {
+        nodes: true,
+        connections: true,
+      },
+    });
+    // Transform the nodes and edges to the format that React Flow expects
+    const nodes: Node[] = workflow.nodes.map((node) => ({
+      id: node.id,
+      type: node.type,
+      position: node.position as { x: number; y: number },
+      data: (node.data as Record<string, unknown>) || {},
+    }));
 
-      // Transform the connections to  React Flow compatible edges
-      const edges: Edge[] = workflow.connections.map((connection) => ({
-        id: connection.id,
-        source: connection.fromNodeId,
-        target: connection.toNodeId,
-        sourceHandle: connection.fromOutput,
-        targetHandle: connection.toInput,
-      }));
+    // Transform the connections to  React Flow compatible edges
+    const edges: Edge[] = workflow.connections.map((connection) => ({
+      id: connection.id,
+      source: connection.fromNodeId,
+      target: connection.toNodeId,
+      sourceHandle: connection.fromOutput,
+      targetHandle: connection.toInput,
+    }));
 
-      return {
-        id: workflow.id,
-        name: workflow.name,
-        nodes,
-        edges,
-      };
-    }),
+    return {
+      id: workflow.id,
+      name: workflow.name,
+      nodes,
+      edges,
+    };
+  }),
   getMany: protectedProcedure
     .input(
       z.object({

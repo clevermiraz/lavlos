@@ -1,0 +1,63 @@
+{
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.biome": "explicit",
+    // "source.fixAll.tslint": "explicit",
+    "source.organizeImports.biome": "explicit"
+  },
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact"
+  },
+  "path-autocomplete.extensionOnImport": true,
+  "path-autocomplete.excludedItems": {
+    "*/.js": {
+      "when": "**"
+    },
+    "*/.jsx": {
+      "when": "**"
+    }
+  },
+  "javascript.validate.enable": false,
+  "typescript.validate.enable": false,
+
+  // extra
+  "editor.fontFamily": "Victor Mono, Fira Code",
+  "editor.fontWeight": "500",
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.cursorBlinking": "expand",
+  "editor.cursorStyle": "line",
+  "editor.cursorWidth": 2,
+  "editor.fontLigatures": true,
+  "editor.fontSize": 16,
+  "editor.lineHeight": 27,
+  "editor.detectIndentation": true,
+  "editor.wordWrap": "on",
+
+  // terminal
+  "terminal.integrated.fontFamily": "Victor Mono, MesloLGS NF",
+  "terminal.integrated.fontSize": 16,
+
+  // file exclude for run node js project in smooth position
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/tmp": true,
+    "**/node_modules": true,
+    "**/dist": true
+  },
+
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  "tailwindCSS.experimental.configFile": "packages/ui/src/styles/globals.css",
+  "prettier.singleQuote": true
+}

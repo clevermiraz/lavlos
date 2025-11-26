@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -26,56 +27,51 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
+import z from 'zod';
 
 const formSchema = z.object({
   endpoint: z.url({ message: 'Please enter a valid URL' }),
   method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'PATCH']),
   body: z.string().optional(),
-  // .refine() TODO
+  // .refine() TODO JSON6
 });
 
-export type FormType = z.infer<typeof formSchema>;
+export type HttpRequestFormValues = z.infer<typeof formSchema>;
 
 interface ManualTriggerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: z.infer<typeof formSchema>) => void;
-  defaultEndpoint?: string;
-  defaultMethod?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
-  defaultBody?: string;
+  defaultValues?: Partial<HttpRequestFormValues>;
 }
 
 export const HttpRequestDialog = ({
   open,
   onOpenChange,
   onSubmit,
-  defaultEndpoint = '',
-  defaultMethod = 'GET',
-  defaultBody = '',
+  defaultValues = {},
 }: ManualTriggerDialogProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      endpoint: defaultEndpoint,
-      method: defaultMethod,
-      body: defaultBody,
+      endpoint: defaultValues.endpoint || '',
+      method: defaultValues.method || 'GET',
+      body: defaultValues.body || '',
     },
   });
 
   useEffect(() => {
     if (open) {
       form.reset({
-        endpoint: defaultEndpoint,
-        method: defaultMethod,
-        body: defaultBody,
+        endpoint: defaultValues.endpoint || '',
+        method: defaultValues.method || 'GET',
+        body: defaultValues.body || '',
       });
     }
-  }, [defaultEndpoint, defaultMethod, defaultBody, form, open]);
+  }, [defaultValues, form, open]);
 
   const watchMethod = form.watch('method');
   const showBodyField = ['POST', 'PUT', 'PATCH'].includes(watchMethod);
@@ -87,63 +83,53 @@ export const HttpRequestDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-w-sm'>
+      <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>HTTP Request </DialogTitle>
-          <DialogDescription>
-            Configure settings for the HTTP Request node.
-          </DialogDescription>
+          <DialogDescription>Configure settings for the HTTP Request node.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className='space-y-8 mt-4'
-          >
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8 mt-4">
             <FormField
               control={form.control}
-              name='method'
+              name="method"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Method</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className='w-full'>
-                        <SelectValue placeholder='Select a method' />
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a method" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value='GET'>GET</SelectItem>
-                      <SelectItem value='POST'>POST</SelectItem>
-                      <SelectItem value='PUT'>PUT</SelectItem>
-                      <SelectItem value='PATCH'>PATCH</SelectItem>
-                      <SelectItem value='DELETE'>DELETE</SelectItem>
+                      <SelectItem value="GET">GET</SelectItem>
+                      <SelectItem value="POST">POST</SelectItem>
+                      <SelectItem value="PUT">PUT</SelectItem>
+                      <SelectItem value="PATCH">PATCH</SelectItem>
+                      <SelectItem value="DELETE">DELETE</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    The HTTP method to use for the request.
-                  </FormDescription>
+                  <FormDescription>The HTTP method to use for the request.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name='endpoint'
+              name="endpoint"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Endpoint URL</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder='https://api.example.com/users/{{httpResponse.data.id}}'
+                      placeholder="https://api.example.com/users/{{httpResponse.data.id}}"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    Static URL or use {'{{variables}}'} for simple values or{' '}
-                    {'{{json variables}}'} to stringify objects.
+                    Static URL or use {'{{variables}}'} for simple values or {'{{json variables}}'}{' '}
+                    to stringify objects.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -152,7 +138,7 @@ export const HttpRequestDialog = ({
             {showBodyField && (
               <FormField
                 control={form.control}
-                name='body'
+                name="body"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Request Body</FormLabel>
@@ -161,22 +147,21 @@ export const HttpRequestDialog = ({
                         placeholder={
                           '\n  {"userId": "{{httpResponse.data.id}}\n  "name": "{{httpResponse.data.name}}"\n  "items": "{{httpResponse.data.items}}"\n}'
                         }
-                        className='min-h-[120px] font-mono text-sm'
+                        className="min-h-[120px] font-mono text-sm"
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      JSON with template variables. Use {'{{ variables}}'} for
-                      simple values or {'{{json variables}}'} to stringify
-                      objects.
+                      JSON with template variables. Use {'{{ variables}}'} for simple values or{' '}
+                      {'{{json variables}}'} to stringify objects.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             )}
-            <DialogFooter className='mt-4'>
-              <Button type='submit'>Save</Button>
+            <DialogFooter className="mt-4">
+              <Button type="submit">Save</Button>
             </DialogFooter>
           </form>
         </Form>
